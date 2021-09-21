@@ -1,0 +1,142 @@
+-- create index 
+PUT /calls_details_2021
+{
+  "mappings": {
+    "properties": {
+      "caller_name":    { "type": "keyword" },  
+      "caller_city":    { "type": "keyword"  }, 
+      "destinator_name":   { "type": "keyword"  },
+      "destinator_city":   { "type": "keyword"  } 
+    }
+  }
+}
+-- add this data in calls_details_2021.json
+
+{ "create" : { "_index" : "calls_details_2021", "_id" : "1" } }
+{ "id": "1", "caller_name" : "John", "caller_city": "Miami" , "destinator_name": "Aina", "destinator_city": "Paris", "duration": 30, "date":  "2021-01-02"}
+{ "create" : { "_index" : "calls_details_2021", "_id" : "2" } }
+{ "id": "2", "caller_name" : "John", "caller_city": "Miami" , "destinator_name": "Akintola", "destinator_city": "Lagos", "duration": 20, "date":  "2021-01-02"}
+{ "create" : { "_index" : "calls_details_2021", "_id" : "3" } }
+{ "id": "3", "caller_name" : "Torsten", "caller_city": "Berlin" , "destinator_name": "Clarice", "destinator_city": "Montreal", "duration": 5, "date":  "2021-01-02"}
+{ "create" : { "_index" : "calls_details_2021", "_id" : "4" } }
+{ "id": "4", "caller_name" : "John", "caller_city": "Miami" , "destinator_name": "Aina", "destinator_city": "Paris", "duration": 15, "date":  "2021-01-03"}
+{ "create" : { "_index" : "calls_details_2021", "_id" : "5" } }
+{ "id": "5", "caller_name" : "Torsten", "caller_city": "Berlin" , "destinator_name": "George", "destinator_city": "Belgium", "duration": 18, "date":  "2021-01-03"}
+{ "create" : { "_index" : "calls_details_2021", "_id" : "6" } }
+{ "id": "6", "caller_name" : "John", "caller_city": "Miami" , "destinator_name": "Aina", "destinator_city": "Paris", "duration": 21, "date":  "2021-01-04"}
+{ "create" : { "_index" : "calls_details_2021", "_id" : "7" } }
+{ "id": "7", "caller_name" : "John", "caller_city": "Miami" , "destinator_name": "Clarice", "destinator_city": "Montreal", "duration": 45, "date":  "2021-01-04"}
+{ "create" : { "_index" : "calls_details_2021", "_id" : "8" } }
+{ "id": "8", "caller_name" : "Torsten", "caller_city": "Berlin" , "destinator_name": "Samba", "destinator_city": "Dakar", "duration": 5, "date":  "2021-01-04"}
+{ "create" : { "_index" : "calls_details_2021", "_id" : "9" } }
+{ "id": "9", "caller_name" : "John", "caller_city": "Miami" , "destinator_name": "Dakota", "destinator_city": "Australia", "duration": 7, "date":  "2021-01-04"}
+{ "create" : { "_index" : "calls_details_2021", "_id" : "10" } }
+{ "id": "10", "caller_name" : "Torsten", "caller_city": "Berlin" , "destinator_name": "George", "destinator_city": "Belgium", "duration": 50, "date":  "2021-01-05"}
+
+
+-- add bulk data 
+curl -H "Content-Type: application/x-ndjson" --user elastic -X POST http://localhost:9200/phone_calls_details/_bulk?pretty  --data-binary @calls_details_2021.json
+
+
+What is aggregation?
+An aggregation computes, summarizes and extracts new information from your original dataset as metrics, statistics, or other analytics.
+In Elasticsearch, we have three (03) kinds of aggregation: 
+metrics, buckets, and pipelines aggregation.
+
+Metrics
+-------
+A metric is an aggregation that calculates some values such as a sum or average, from field values. To hone our understanding, let’s go through the use cases below.
+
+What’s the phone call that lasted the most?
+
+GET /calls_details_2021/_search
+{ "size":0,
+  "aggs":{
+    "max_call_duraion":{
+      "max":{
+        "field": "duration"
+      }
+    }
+  }
+}
+
+What is the average time of a call?
+
+GET /calls_details_2021/_search
+{ "size":0,
+  "aggs":{
+    "avg_call_duraion":{
+      "avg":{
+        "field": "duration"
+      }
+    }
+  }
+}
+
+Buckets
+-------
+Buckets, as the name implies, are aggregations that group documents into buckets or groups also called bins, based on field values, ranges, or other criteria. Let’s look at some examples.
+
+How many calls did every caller make so far?
+GET /calls_details_2021/_search
+{ "size":0,
+  "aggs":{
+    "count_call_per_caler":{
+      "terms":{
+        "field": "caller_name"
+      }
+    }
+  }
+}
+
+ How many total minutes did every caller spend on the phone?
+ Here the things start being interesting. We’ll mix bucket and metric to plot some analytics data as it comes in real life.
+ GET /calls_details_2021/_search
+{ "size":0,
+  "aggs":{
+    "count_call_per_caler":{
+      "terms":{
+        "field": "caller_name"
+      },
+      "aggs": {
+        "duration_sum": {
+          "sum": {
+            "field": "duration"
+          }
+        }
+      }
+    }
+  }
+}
+
+Pipelines
+----------
+We hit the last but not the least type. The pipelines are a particular kind of aggregation. Instead of taking information from the documents, they take data from other aggregations to produce the desired result. Let’s have a look at an example.
+ How long on average did callers spend on the phone?
+ GET /calls_details_2021/_search
+{ "size":0,
+  "aggs":{
+    "count_call_per_caler":{
+      "terms":{
+        "field": "caller_name"
+      },
+      "aggs": {
+        "duration_sum": {
+          "sum": {
+            "field": "duration"
+          }
+        }
+      }
+    },
+    "duration_avg_per_caller": {
+      "avg_bucket": {
+        "buckets_path": "calls_per_caller_name>duration_sum"
+      }
+    }
+  }
+}
+
+
+
+
+
