@@ -1,0 +1,77 @@
+-- create index recipes with defined mappings
+
+PUT /recipes
+{
+ "mappings" : {
+      "properties" : {
+        "created" : {
+          "type" : "date",
+          "format" : "yyyy/MM/dd HH:mm:ss||yyyy/MM/dd||epoch_millis"
+        },
+        "description" : {
+          "type" : "text"
+        },
+        "ingredients" : {
+          "properties" : {
+            "name" : {
+              "type" : "text"
+            },
+            "quantity" : {
+              "type" : "text"
+            }
+          }
+        },
+        "preparation_time_minutes" : {
+          "type" : "long"
+        },
+        "ratings" : {
+          "type" : "float"
+        },
+        "servings" : {
+          "properties" : {
+            "max" : {
+              "type" : "long"
+            },
+            "min" : {
+              "type" : "long"
+            }
+          }
+        },
+        "steps" : {
+          "type" : "text"
+        },
+        "title" : {
+          "type" : "text"
+        }
+      }
+    }
+}
+
+// Loading Bulk-data
+
+curl -H "Content-Type: application/x-ndjson" --user username -X POST http://localhost:9200/index_name/_bulk?pretty  --data-binary "@file_path.json"
+
+
+// Reading data from the index
+
+ Read all the entries:  
+ 
+ GET /recipes/_search?pretty=true
+
+ Read  data based on specific _id: 
+
+ GET /recipes/_doc/1
+
+// Updating data
+
+POST /recipes/_update/3
+{
+  "doc":{
+    "ratings":[4.0]
+  }
+}
+
+// Deleting data
+
+Delete whole data: DELETE /recipes
+Delete specific id: DELETE /recipes/_doc/4

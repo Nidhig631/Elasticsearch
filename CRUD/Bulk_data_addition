@@ -1,0 +1,1 @@
+curl -H "Content-Type: application/x-ndjson" --user username -X POST http://localhost:9200/index_name/_bulk?pretty  --data-binary "@file_path.json"
